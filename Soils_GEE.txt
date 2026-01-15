@@ -1,0 +1,29 @@
+// 1. Load your uploaded asset
+// Replace 'users/yourusername/qld_soils' with your actual asset path
+var qldSoils = ee.FeatureCollection('projects/ee-ajwcairns/assets/Soils_wet_tropical_coast_study_Cardwell_Tully_Innisfail_area_CTI');
+
+// 2. Filter the data
+// Example: Filter for a specific soil type or map unit
+var filteredSoils = qldSoils.filter(ee.Filter.eq('SOIL_TYPE', 'Tully'));
+
+// 3. Create a styling function
+// This helps color the polygons based on an attribute (e.g., 'DRAINAGE')
+var styledSoils = qldSoils.map(function(feature) {
+  var drainage = feature.get('DRAINAGE');
+  var color = ee.Algorithms.If(ee.String(drainage).equals('Poor'), 'red', 
+               ee.Algorithms.If(ee.String(drainage).equals('Well'), 'green', 'blue'));
+  
+  return feature.set({style: {color: color, fillColor: color}});
+});
+
+// 4. Set the map view and add layers
+Map.centerObject(qldSoils, 10);
+
+// Add the original dataset with a simple color
+Map.addLayer(qldSoils, {color: 'orange'}, 'All QLD Soils (1:50k)');
+
+// Add the filtered dataset with a specific color
+Map.addLayer(filteredSoils, {color: 'purple'}, 'Filtered Soils (Vertosols)');
+
+// Add a stylized layer using the 'style' method
+Map.addLayer(styledSoils.style({styleProperty: 'style'}), {}, 'Soils by Drainage');
